@@ -20,7 +20,7 @@ var maxDuration;
 // Placeholder for driving mode
 var mode;
 // API URL for determining location from IP address
-var ipURL = "http://ipinfo.io";
+var ipURL = "https://ipinfo.io";
 
 function initMap() {
 
@@ -408,7 +408,7 @@ function clearFilterText() {
 }
 
 function getWeatherInfo(lat, lng) {
-    var weatherURL = "http://api.wunderground.com/api/6959a5275080e706/forecast/q/" + lat + "," + lng + ".json";
+    var weatherURL = "https://api.wunderground.com/api/6959a5275080e706/forecast/q/" + lat + "," + lng + ".json";
     var weatherHTML = "<h2>Weather</h2>";
     $.ajax({
         url: weatherURL,
