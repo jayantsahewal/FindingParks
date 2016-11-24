@@ -18,7 +18,7 @@ var placeInfoWindow;
 // Placeholder for duration
 var maxDuration;
 // Placeholder for driving mode
-var mode;
+var currMode;
 // API URL for determining location from IP address
 var ipURL = "https://ipinfo.io";
 
@@ -60,7 +60,6 @@ function initMap() {
 
 // Set map center to current address
 function setMapCenter() {
-    console.log("setting center to: ", currAddress);
     // Initialize the geocoder.
     var geocoder = new google.maps.Geocoder();
     // Geocode the address/area entered to get the center. Then, center the map
@@ -153,18 +152,19 @@ function searchWithinTime() {
         }
         var destination = currAddress;
 
-        mode = document.getElementById('mode').value;
+        currMode = document.getElementById('mode').value;
         // Now that both the origins and destination are defined, get all the
         // info for the distances between them.
         distanceMatrixService.getDistanceMatrix({
             origins: origins,
             destinations: [destination],
-            travelMode: google.maps.TravelMode[mode],
+            travelMode: google.maps.TravelMode[currMode],
             unitSystem: google.maps.UnitSystem.IMPERIAL,
         }, function(response, status) {
             if (status !== google.maps.DistanceMatrixStatus.OK) {
                 window.alert('Error was: ' + status);
             } else {
+                console.log(response);
                 displayMarkersWithinTime(response);
             }
         });
@@ -209,34 +209,6 @@ function displayMarkersWithinTime(response) {
         zoomToArea();
         clearFilterText();
     }
-}
-// This function is in response to the user selecting "show route" on one
-// of the markers within the calculated distance. This will display the route
-// on the map.
-function displayDirections(destination) {
-    mode = document.getElementById('mode').value;
-    hideMarkers(placeMarkers);
-    var directionsService = new google.maps.DirectionsService;
-    directionsService.route({
-        // The origin is the passed in marker's position.
-        origin: currAddress,
-        // The destination is user entered address.
-        destination: destination,
-        travelMode: google.maps.TravelMode[mode]
-    }, function(response, status) {
-        if (status === google.maps.DirectionsStatus.OK) {
-            directionsDisplay = new google.maps.DirectionsRenderer({
-                map: map,
-                directions: response,
-                draggable: true,
-                polylineOptions: {
-                    strokeColor: 'green'
-                }
-            });
-        } else {
-            window.alert('Directions request failed due to ' + status);
-        }
-    });
 }
 
 // This function creates markers for each place found in either places search.
@@ -304,11 +276,13 @@ function getPlacesDetails(marker, infowindow) {
                 innerHTML += '<br>' + place.formatted_phone_number;
             }
             if (place.formatted_address) {
+                console.log('<br>' + '<div><input type=\"button\" value=\"View Route\" onclick =' +
+                    '\"location.href=\'' + "driving.html?dest=" + place.formatted_address + "&orig=" + currAddress + '\';\"></input></div><br>');
                 innerHTML += '<br>' + '<div><input type=\"button\" value=\"View Route\" onclick =' +
-                    '\"displayDirections(&quot;' + place.formatted_address + '&quot;);\"></input></div>';
+                    '\"location.href=\'' + "driving.html?dest=" + place.formatted_address + "&orig=" + currAddress + "&mod=" + document.getElementById('mode').value + '\';\"></input></div><br>';
             }
             if (place.opening_hours) {
-                innerHTML += '<br><br><strong>Hours:</strong><br>' +
+                innerHTML += '<br><strong>Hours:</strong><br>' +
                     place.opening_hours.weekday_text[0] + '<br>' +
                     place.opening_hours.weekday_text[1] + '<br>' +
                     place.opening_hours.weekday_text[2] + '<br>' +
@@ -318,7 +292,7 @@ function getPlacesDetails(marker, infowindow) {
                     place.opening_hours.weekday_text[6];
             }
             if (place.photos) {
-                innerHTML += '<br><br><img height="100" width="100" src="' + place.photos[0].getUrl({
+                innerHTML += '<br><img height="100" width="100" src="' + place.photos[0].getUrl({
                     maxHeight: 100,
                     maxWidth: 100
                 }) + '">';
@@ -348,7 +322,6 @@ function displayParks() {
             if (directionsDisplay) {
                 directionsDisplay.setMap(null);
             }
-            console.log("setting center to: ", currAddress);
             map.setCenter(results[0].geometry.location);
             map.setZoom(13);
             service.nearbySearch({
@@ -414,7 +387,6 @@ function getWeatherInfo(lat, lng) {
         url: weatherURL,
         dataType: "jsonp",
         success: function(parsed_json) {
-            console.log("success");
             var forecasts = parsed_json['forecast']['simpleforecast']['forecastday'];
             for (var i = 0; i < forecasts.length; i++) {
                 var dayString = forecasts[i]['date']['month'] + '/' + forecasts[i]['date']['day'] + '/' + forecasts[i]['date']['year'];
